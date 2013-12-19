@@ -7,6 +7,16 @@ def localdir(username, *args):
     return os.path.sep.join(p)
 
 
+instance = None
+def singleton(cls):
+    def wrapper():
+        global instance
+        if not instance:
+            instance = cls()
+        return instance
+    return wrapper
+
+@singleton
 class PutBoxBackend(object):
 
     def __init__(self):
@@ -32,6 +42,9 @@ class PutBoxBackend(object):
 
     def remove_file(self, user, filename):
         return "Not really deleted: %s" % localdir(user.name, filename)
+
+    def get_link(self, name):
+        return LinkStore.findBy(url=name)
 
 
 ##

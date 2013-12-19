@@ -5,7 +5,7 @@ create_table () {
 CREATE TABLE link_store (
     id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     owner       TEXT NOT NULL,
-    url         TEXT NOT NULL,
+    url         TEXT NOT NULL UNIQUE,
     active      BOOLEAN NOT NULL DEFAULT FALSE,
     file        TEXT,
     -- files       TEXT[1] NOT NULL DEFAULT ARRAY[]::TEXT[1],
