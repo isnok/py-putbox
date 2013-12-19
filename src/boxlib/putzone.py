@@ -78,17 +78,22 @@ class UploadResource(PostableResource):
         return Response(
             OK,
             {'content-type': MimeType('text', 'html')},
-            stream='Upload complete. <a href="/put">Go back to PutZone.</a>'
+            stream='Upload complete.<br><a href="/put">Go back to PutZone.</a>'
         )
 
 class DeleteResource(Resource):
 
+    def __init__(self):
+        self.backend = PutBoxBackend()
+
     def render(self, ctx):
         request = IRequest(ctx)
         filename = request.args['file'][0]
+        user = IAuthenticatedRequest(ctx).avatar
+        backend_rsp = self.backend.remove_file(user, filename)
 
         return Response(
             OK,
             {'content-type': MimeType('text', 'html')},
-            stream='File deleted: %s <a href="/put">Go back to PutZone.</a>' % filename
+            stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
         )

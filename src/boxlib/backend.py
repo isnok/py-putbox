@@ -17,3 +17,7 @@ class PutBoxBackend(object):
     def list_links(self, user):
         text = [ "No links up to now." ]
         return text
+
+    def remove_file(self, user, filename):
+        return "Not really deleted: %s" % localdir(user.name, filename)
+
