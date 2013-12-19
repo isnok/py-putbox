@@ -12,6 +12,9 @@ from twisted.web2.http_headers import MimeType
 
 from boxlib.backend import PutBoxBackend
 
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
+
 class PutResource(Resource):
     isLeaf = True
 
@@ -20,16 +23,20 @@ class PutResource(Resource):
         self.putChild('delete', DeleteResource())
         self.backend = PutBoxBackend()
 
+    @inlineCallbacks
     def render(self, ctx):
         user = IAuthenticatedRequest(ctx).avatar
         text = [ "Hello %s." % user.name, "Welcome to the put-Zone!", '' ]
         text.extend(self.render_files(user))
-        text.extend(self.render_links(user))
+        links = yield self.render_links(user)
+        text.extend(links)
         text.extend(self.mk_link_form())
-        return Response(
-            OK,
-            {'content-type': MimeType('text', 'html')},
-            stream='<br>'.join(text)
+        returnValue(
+            Response(
+                OK,
+                {'content-type': MimeType('text', 'html')},
+                stream='<br>'.join(text)
+            )
         )
 
     def render_file(self, filename):
@@ -42,11 +49,13 @@ class PutResource(Resource):
         text.append('')
         return text
 
+    @inlineCallbacks
     def render_links(self, user):
         text = [ "Links of user %r:" % user.name ]
-        text.extend(self.backend.list_links(user))
+        raw_links = yield self.backend.list_links(user)
+        text.extend(map(str, raw_links))  # we get unicode back, but need str
         text.append('')
-        return text
+        returnValue(text)
 
     def mk_link_form(self):
         return ["""

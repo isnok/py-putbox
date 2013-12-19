@@ -18,5 +18,9 @@ parser.add_argument(
         "-P", "--passwordfile", type=str, default='putbox.passwd',
         help="password file to use"
     )
+parser.add_argument(
+        "-D", "--database", type=str, default='linkstore.db',
+        help="sqlite3 db file to use"
+    )
 
 args = parser.parse_args()

@@ -6,6 +6,7 @@ def localdir(username, *args):
     p.extend(args)
     return os.path.sep.join(p)
 
+
 class PutBoxBackend(object):
 
     def __init__(self):
@@ -16,8 +17,12 @@ class PutBoxBackend(object):
         return text
 
     def list_links(self, user):
-        text = [ "No links up to now." ]
-        return text
+        links = LinkStore.findBy(owner=user.name)
+        links.addCallback(self.extract_links)
+        return links
+
+    def extract_links(self, result):
+        return [r.url for r in result]
 
     def add_file(self, user, record):
         try:
@@ -33,3 +38,34 @@ class PutBoxBackend(object):
     def remove_file(self, user, filename):
         return "Not really deleted: %s" % localdir(user.name, filename)
 
+
+##
+#  DB init
+##
+
+from twisted.enterprise import adbapi
+from twistar.registry import Registry
+from twisted.internet import reactor
+
+from boxlib.setup import args
+
+# Connect to the DB
+SqliteRegistry = Registry(
+    adbapi.ConnectionPool(
+        'sqlite3',
+        args.database
+    )
+)
+
+from twistar.dbobject import DBObject
+
+class LinkStore(DBObject):
+    REGISTRY = SqliteRegistry
+    TABLENAME = 'link_store'
+
+#from twisted.internet import reactor
+
+#def show(result):
+    #log.msg("And it is... %s" % result)
+
+#LinkStore.find(where=['id IS NOT NULL']).addCallback(show)
