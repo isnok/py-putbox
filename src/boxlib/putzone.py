@@ -50,7 +50,7 @@ class PutResource(Resource):
     <input type="hidden" name="file" value="%s"><br/>
     Set a download url: <input type="text" name="url" value="%s"><br />
     Set a download count: <input type="text" name="get_count" value="30"><br />
-    <input type="submit" value="submit">
+    <input type="submit" value="create link">
 </form>
         '''  % (filename, filename, filename, rndname(18,22))
         return formatted

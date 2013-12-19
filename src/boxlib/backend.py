@@ -79,19 +79,27 @@ class PutBoxBackend(object):
                 #active=True
             ).addCallback(
                 self.filterExpired
-            ).addCallback(
-                self.increaseCounts
+            #).addCallback(
+                #self.increaseCounts
             )
 
     def filterExpired(self, lst):
-        return filter(lambda r: r.get_count <= r.get_limit, lst)
+        return filter(lambda r: r.get_count < r.get_limit, lst)
 
     @inlineCallbacks
-    def increaseCounts(self, lst):
-        for record in lst:
-            record.get_count += 1
-            yield record.save()
-        returnValue(lst)
+    def increaseCount(self, url):
+        dl_ok = True
+        links = yield LinkStore.findBy(url=url)
+        for link in links:
+            link.get_count += 1
+            count = link.get_count
+            limit = link.get_limit
+            filename = "files/%s/%s" % (link.owner, link.file)
+            if count > limit:
+                dl_ok = False
+            log.msg("Count increase %r to %s/%s." % (url, count, limit))
+            yield link.save()
+        returnValue((dl_ok, filename))
 
     @inlineCallbacks
     def delete_link(self, user, url):
