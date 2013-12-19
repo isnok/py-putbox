@@ -15,6 +15,8 @@ from boxlib.backend import PutBoxBackend
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
+from boxlib.helpers import rndname
+
 class PutResource(Resource):
     isLeaf = True
 
@@ -66,9 +68,11 @@ class PutResource(Resource):
         return ["""
 <form action="/put/upload" enctype="multipart/form-data" method="post">
     Choose a file to upload: <input type="file" name="putted"><br/>
+    Set a download url: <input type="text" name="url" value="%s"><br />
+    Set a download count: <input type="text" name="get_count" value="30"><br />
     <input type="submit" value="submit">
 </form>
-        """]
+        """ % rndname(18,22)]
 
 
 from twisted.web2.iweb import IRequest
@@ -80,20 +84,26 @@ class UploadResource(PostableResource):
     def __init__(self):
         self.backend = PutBoxBackend()
 
+    @inlineCallbacks
     def render(self, ctx):
         request = IRequest(ctx)
         user = IAuthenticatedRequest(ctx).avatar
+
+        link_url = request.args['url'][0]
+        get_count = request.args['get_count'][0]
 
         log.msg('---------------- file upload ----------------')
         for formkey, records in request.files.iteritems():
             #log.msg("Received as %s:" % formkey)
             for record in records:
-                backend_rsp = self.backend.add_file(user, record)
+                backend_rsp = yield self.backend.add_file(user, link_url, get_count, record)
 
-        return Response(
-            OK,
-            {'content-type': MimeType('text', 'html')},
-            stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
+        returnValue(
+            Response(
+                OK,
+                {'content-type': MimeType('text', 'html')},
+                stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
+            )
         )
 
 

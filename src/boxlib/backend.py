@@ -16,6 +16,10 @@ def singleton(cls):
         return instance
     return wrapper
 
+
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
+
 @singleton
 class PutBoxBackend(object):
 
@@ -29,16 +33,37 @@ class PutBoxBackend(object):
     def list_links(self, user):
         return LinkStore.findBy(owner=user.name)
 
-    def add_file(self, user, record):
+    @inlineCallbacks
+    def add_file(self, user, url, count, record):
         try:
             filename, mime, stream = record
-            with open(localdir(user.name, filename), 'w') as f:
-                f.write(stream.read())
-            log.msg('saved: %s' % localdir(user.name, filename))
-            return 'Upload of %s complete.' % filename
+            location = localdir(user.name, filename)
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
-            return 'Sorry. Something went wrong while saving your upload: %s' % ex.message
+            returnValue('Sorry. Something was wrong with your upload: %s' % ex.message)
+        try:
+            db_record = yield LinkStore(
+                    owner=user.name,
+                    url=str(url),
+                    file=filename,
+                    active=True,
+                    get_limit=int(count),
+                    get_count=0
+                ).save()
+        except Exception, ex:
+            log.err("Upload FAILED: %s" % ex.message)
+            returnValue('Sorry. The DB said: %s' % ex.message)
+        try:
+            self.write_file(stream, location)
+        except Exception, ex:
+            log.err("Upload FAILED: %s" % ex.message)
+            returnValue('Sorry. Something went wrong saving your upload: %s' % ex.message)
+        returnValue('Upload of %s complete.' % filename)
+
+    def write_file(self, stream, location):
+        with open(location, 'w') as f:
+            f.write(stream.read())
+        log.msg('saved: %s' % location)
 
     def remove_file(self, user, filename):
         return "Not really deleted: %s" % localdir(user.name, filename)
