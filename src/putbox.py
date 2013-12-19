@@ -6,12 +6,26 @@ from boxlib.logging import logwrapper as log
 if args.debug:
     log.msg("Startup args: %s" % vars(args))
 
-from twisted.internet import reactor
-from twisted.web.server import Site
-from twisted.web.resource import Resource
+from twisted.web2.resource import Resource
+from boxlib.putting import put_guarded
 
-mainsite = Site(Resource())
-reactor.listenTCP(args.port, mainsite, interface=args.interface)
+main = Resource()
+main.putChild('put', put_guarded)
+
+from boxlib.putzone import UploadResource
+main.putChild('upload', UploadResource())
+
+
+#from twisted.internet import reactor
+#from twisted.web.server import Site
+
+#reactor.listenTCP(args.port, Site(main), interface=args.interface)
+
+from twisted.internet import reactor
+from twisted.web2.server import Site
+from twisted.web2.channel import HTTPFactory
+
+reactor.listenTCP(args.port, HTTPFactory(Site(main)), interface=args.interface)
 
 #def test(*args):
     #log.msg("test: %s" % (args,))
