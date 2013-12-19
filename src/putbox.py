@@ -12,8 +12,8 @@ from boxlib.putting import put_guarded
 main = Resource()
 main.putChild('put', put_guarded)
 
-from boxlib.putzone import UploadResource
-main.putChild('upload', UploadResource())
+#from boxlib.putzone import UploadResource
+#main.putChild('upload', UploadResource())
 
 
 #from twisted.internet import reactor

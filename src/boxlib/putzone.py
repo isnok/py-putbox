@@ -13,8 +13,8 @@ from twisted.web2.http_headers import MimeType
 class PutResource(Resource):
     isLeaf = True
 
-    #def __init__(self, user):
-        #self.user = user
+    def __init__(self):
+        self.putChild('upload', UploadResource())
 
     def render(self, ctx):
         user = IAuthenticatedRequest(ctx).avatar
@@ -36,7 +36,7 @@ class PutResource(Resource):
 
     def mk_link_form(self):
         return ["""
-<form action="/upload" enctype="multipart/form-data" method="post">
+<form action="/put/upload" enctype="multipart/form-data" method="post">
     Choose a file to upload: <input type="file" name="putted"><br/>
     <input type="submit" value="submit">
 </form>
@@ -60,13 +60,12 @@ class UploadResource(PostableResource):
             log.msg("Received as %s:" % key)
             for record in records:
                 name, mime, stream = record
-                data = stream.read()
                 with open('files/test/%s' % name, 'w') as f:
-                    f.write(data)
-                log.msg('got: %s %s %s %r' % (name, mime, stream, data))
+                    f.write(stream.read())
+                log.msg('saved: %s %s' % (name, mime))
 
         return Response(
             OK,
             {'content-type': MimeType('text', 'html')},
-            stream='upload complete.'
+            stream='Upload complete. <a href="/put">Go back to PutZone.</a>'
         )
