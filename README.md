@@ -7,5 +7,6 @@ Dependencies
 ------------
 
 python
-twisted
+python-twisted
+python-argparse
 sqlite3

@@ -5,7 +5,9 @@ from argparse import ArgumentParser
 parser = ArgumentParser(description="putbox launcher")
 
 parser.add_argument(
-        '-d', '--debug', help="debug flag (do not use in production :-)")
+        '-d', '--debug', default=False, action="store_true",
+        help="debug flag (do not use in production :-)"
+    )
 
 args = parser.parse_args()
 
