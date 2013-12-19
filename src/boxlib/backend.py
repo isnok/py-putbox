@@ -54,16 +54,17 @@ class PutBoxBackend(object):
             log.err("Upload FAILED: %s" % ex.message)
             returnValue('Sorry. The DB said: %s' % ex.message)
         try:
-            self.write_file(stream, location)
+            backend_rsp = self.write_file(stream, location)
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
             returnValue('Sorry. Something went wrong saving your upload: %s' % ex.message)
-        returnValue('Upload of %s complete.' % filename)
+        returnValue(rsp)
 
     def write_file(self, stream, location):
         with open(location, 'w') as f:
             f.write(stream.read())
         log.msg('saved: %s' % location)
+        return 'Upload to %s complete.' % location
 
     def remove_file(self, user, filename):
         return "Not really deleted: %s" % localdir(user.name, filename)
