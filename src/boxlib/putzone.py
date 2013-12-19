@@ -89,6 +89,8 @@ from twisted.web2.iweb import IRequest
 from twisted.web2.http import Response
 from twisted.web2.resource import PostableResource
 
+from twisted.internet.defer import succeed
+
 class UploadResource(PostableResource):
 
     def __init__(self):
@@ -103,7 +105,8 @@ class UploadResource(PostableResource):
         for formkey, records in request.files.iteritems():
             #log.msg("Received as %s:" % formkey)
             for record in records:
-                backend_rsp = yield self.backend.add_file(user, link_url, get_count, record)
+                backend_rsp = yield self.backend.add_file(user, record)
+        yield succeed(None)
 
         returnValue(
             Response(

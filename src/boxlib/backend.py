@@ -33,20 +33,19 @@ class PutBoxBackend(object):
     def list_links(self, user):
         return LinkStore.findBy(owner=user.name)
 
-    @inlineCallbacks
-    def add_file(self, user, url, count, record):
+    def add_file(self, user, record):
         try:
             filename, mime, stream = record
             location = localdir(user.name, filename)
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
-            returnValue('Sorry. Something was wrong with your upload: %s' % ex.message)
+            return 'Sorry. Something was wrong with your upload: %s' % ex.message
         try:
             backend_rsp = self.write_file(stream, location)
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
-            returnValue('Sorry. Something went wrong saving your upload: %s' % ex.message)
-        returnValue(backend_rsp)
+            return 'Sorry. Something went wrong saving your upload: %s' % ex.message
+        return backend_rsp
 
     def write_file(self, stream, location):
         with open(location, 'w') as f:
@@ -88,13 +87,13 @@ class PutBoxBackend(object):
 
     @inlineCallbacks
     def increaseCount(self, url):
-        dl_ok = True
         links = yield LinkStore.findBy(url=url)
+        dl_ok = bool(links)
         for link in links:
             link.get_count += 1
             count = link.get_count
             limit = link.get_limit
-            filename = "files/%s/%s" % (link.owner, link.file)
+            filename = localdir(link.owner, link.file)
             if count > limit:
                 dl_ok = False
             log.msg("Count increase %r to %s/%s." % (url, count, limit))
