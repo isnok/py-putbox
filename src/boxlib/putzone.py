@@ -16,8 +16,8 @@ class PutResource(Resource):
     #def __init__(self, user):
         #self.user = user
 
-    def render(self, request):
-        user = IAuthenticatedRequest(request).avatar
+    def render(self, ctx):
+        user = IAuthenticatedRequest(ctx).avatar
         text = [ "Hello %s." % user.name, "Welcome to the put-Zone!" ]
         text.extend(self.render_files())
         text.extend(self.render_links())
@@ -36,12 +36,8 @@ class PutResource(Resource):
 
     def mk_link_form(self):
         return ["""
-<form action="/upload?a=1&b=2&b=3" enctype="multipart/form-data" method="post">
-    <input type="hidden" name="foo" value="bar">
-    <input type="hidden" name="file_foo" value="not a file">
-    file_foo: <input type="file" name="file_foo"><br/>
-    file_foo: <input type="file" name="file_foo"><br/>
-    file_bar: <input type="file" name="file_bar"><br/>
+<form action="/upload" enctype="multipart/form-data" method="post">
+    Choose a file to upload: <input type="file" name="putted"><br/>
     <input type="submit" value="submit">
 </form>
         """]
@@ -61,11 +57,13 @@ class UploadResource(PostableResource):
 
         log.msg('file uploads ----------------')
         for key, records in request.files.iteritems():
-            print key
+            log.msg("Received as %s:" % key)
             for record in records:
                 name, mime, stream = record
                 data = stream.read()
-                print '   %s %s %s %r' % (name, mime, stream, data)
+                with open('files/test/%s' % name, 'w') as f:
+                    f.write(data)
+                log.msg('got: %s %s %s %r' % (name, mime, stream, data))
 
         return Response(
             OK,
