@@ -89,6 +89,7 @@ class PutBoxBackend(object):
     def increaseCount(self, url):
         links = yield LinkStore.findBy(url=url)
         dl_ok = bool(links)
+        filename = None
         for link in links:
             link.get_count += 1
             count = link.get_count
