@@ -12,6 +12,9 @@ from boxlib.putting import put_guarded
 main = Resource()
 main.putChild('put', put_guarded)
 
+from boxlib.getzone import GetResource
+main.putChild('get', GetResource())
+
 #from boxlib.putzone import UploadResource
 #main.putChild('upload', UploadResource())
 
