@@ -23,6 +23,7 @@ class PutResource(Resource):
     def __init__(self):
         self.putChild('upload', UploadResource())
         self.putChild('delete', DeleteResource())
+        self.putChild('link', LinkResource())
         self.backend = PutBoxBackend()
 
     @inlineCallbacks
@@ -66,8 +67,14 @@ class PutResource(Resource):
 
     def mk_link_form(self):
         return ["""
+Upload a file:
 <form action="/put/upload" enctype="multipart/form-data" method="post">
     Choose a file to upload: <input type="file" name="putted"><br/>
+    <input type="submit" value="submit">
+</form>
+Create a link:
+<form action="/put/link" enctype="multipart/form-data" method="post">
+    Uploaded file name: <input type="text" name="file"><br/>
     Set a download url: <input type="text" name="url" value="%s"><br />
     Set a download count: <input type="text" name="get_count" value="30"><br />
     <input type="submit" value="submit">
@@ -88,9 +95,6 @@ class UploadResource(PostableResource):
     def render(self, ctx):
         request = IRequest(ctx)
         user = IAuthenticatedRequest(ctx).avatar
-
-        link_url = request.args['url'][0]
-        get_count = request.args['get_count'][0]
 
         log.msg('---------------- file upload ----------------')
         for formkey, records in request.files.iteritems():
@@ -122,4 +126,30 @@ class DeleteResource(Resource):
             OK,
             {'content-type': MimeType('text', 'html')},
             stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
+        )
+
+
+class LinkResource(PostableResource):
+
+    def __init__(self):
+        self.backend = PutBoxBackend()
+
+    @inlineCallbacks
+    def render(self, ctx):
+        request = IRequest(ctx)
+        user = IAuthenticatedRequest(ctx).avatar
+
+        file = request.args['file'][0]
+        url = request.args['url'][0]
+        get_count = request.args['get_count'][0]
+
+        log.msg('---------------- link create ----------------')
+        backend_rsp = yield self.backend.add_link(user, file, url, get_count)
+
+        returnValue(
+            Response(
+                OK,
+                {'content-type': MimeType('text', 'html')},
+                stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
+            )
         )

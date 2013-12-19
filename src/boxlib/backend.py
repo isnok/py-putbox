@@ -42,18 +42,6 @@ class PutBoxBackend(object):
             log.err("Upload FAILED: %s" % ex.message)
             returnValue('Sorry. Something was wrong with your upload: %s' % ex.message)
         try:
-            db_record = yield LinkStore(
-                    owner=user.name,
-                    url=str(url),
-                    file=filename,
-                    active=True,
-                    get_limit=int(count),
-                    get_count=0
-                ).save()
-        except Exception, ex:
-            log.err("Upload FAILED: %s" % ex.message)
-            returnValue('Sorry. The DB said: %s' % ex.message)
-        try:
             backend_rsp = self.write_file(stream, location)
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
@@ -68,6 +56,22 @@ class PutBoxBackend(object):
 
     def remove_file(self, user, filename):
         return "Not really deleted: %s" % localdir(user.name, filename)
+
+    @inlineCallbacks
+    def add_link(self, user, file, url, count):
+        try:
+            db_record = yield LinkStore(
+                    owner=user.name,
+                    url=url,
+                    file=file,
+                    active=True,
+                    get_limit=int(count),
+                    get_count=0
+                ).save()
+        except Exception, ex:
+            log.err("Upload FAILED: %s" % ex.message)
+            returnValue('Sorry. The DB said: %s' % ex.message)
+        returnValue("Link %s created." % url)
 
     def get_link(self, name):
         return LinkStore.findBy(
