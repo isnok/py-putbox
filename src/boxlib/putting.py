@@ -12,7 +12,7 @@ class HTTPUser(object):
     implements(IHTTPUser)
     username = None
     def __init__(self, username):
-        self.username = username
+        self.name = username
 
 from twisted.cred.portal import IRealm
 

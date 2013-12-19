@@ -7,6 +7,8 @@ from boxlib.logging import logwrapper as log
 from twisted.web2.resource import Resource
 from twisted.web2.auth.interfaces import IAuthenticatedRequest
 from twisted.web2.http import Response
+from twisted.web2.responsecode import OK
+from twisted.web2.http_headers import MimeType
 
 class PutResource(Resource):
     isLeaf = True
@@ -15,12 +17,16 @@ class PutResource(Resource):
         #self.user = user
 
     def render(self, request):
-        user = IAuthenticatedRequest(request).avatar.username
-        text = [ "Hello %s." % user, "Welcome to the put-Zone!" ]
+        user = IAuthenticatedRequest(request).avatar
+        text = [ "Hello %s." % user.name, "Welcome to the put-Zone!" ]
         text.extend(self.render_files())
         text.extend(self.render_links())
         text.extend(self.mk_link_form())
-        return Response( stream='<br>'.join(text) )
+        return Response(
+            OK,
+            {'content-type': MimeType('text', 'html')},
+            stream='<br>'.join(text)
+        )
 
     def render_files(self):
         return []
@@ -43,8 +49,9 @@ class PutResource(Resource):
 
 from twisted.web2.iweb import IRequest
 from twisted.web2.http import Response
+from twisted.web2.resource import PostableResource
 
-class UploadResource(Resource):
+class UploadResource(PostableResource):
 
     def render(self, ctx):
         request = IRequest(ctx)
@@ -52,7 +59,7 @@ class UploadResource(Resource):
             for val in vals:
                 print key, val
 
-        print 'file uploads ----------------'
+        log.msg('file uploads ----------------')
         for key, records in request.files.iteritems():
             print key
             for record in records:
@@ -60,4 +67,8 @@ class UploadResource(Resource):
                 data = stream.read()
                 print '   %s %s %s %r' % (name, mime, stream, data)
 
-        return Response(stream='upload complete.')
+        return Response(
+            OK,
+            {'content-type': MimeType('text', 'html')},
+            stream='upload complete.'
+        )
