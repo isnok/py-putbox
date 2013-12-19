@@ -17,12 +17,7 @@ class PutBoxBackend(object):
         return text
 
     def list_links(self, user):
-        links = LinkStore.findBy(owner=user.name)
-        links.addCallback(self.extract_links)
-        return links
-
-    def extract_links(self, result):
-        return [r.url for r in result]
+        return LinkStore.findBy(owner=user.name)
 
     def add_file(self, user, record):
         try:

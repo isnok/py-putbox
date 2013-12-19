@@ -49,11 +49,16 @@ class PutResource(Resource):
         text.append('')
         return text
 
+    def render_link(self, link):
+        ''' we get unicode from the twistar object, but need str '''
+        formatted = 'Link: <a href="/get/%(url)s">%(url)s</a> (limit: %(get_limit)s, downloaded: %(get_count)s)' % vars(link)
+        return str(formatted)
+
     @inlineCallbacks
     def render_links(self, user):
         text = [ "Links of user %r:" % user.name ]
         raw_links = yield self.backend.list_links(user)
-        text.extend(map(str, raw_links))  # we get unicode back, but need str
+        text.extend(map(self.render_link, raw_links))
         text.append('')
         returnValue(text)
 
