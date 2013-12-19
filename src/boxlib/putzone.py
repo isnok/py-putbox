@@ -63,23 +63,25 @@ from twisted.web2.resource import PostableResource
 
 class UploadResource(PostableResource):
 
+    def __init__(self):
+        self.backend = PutBoxBackend()
+
     def render(self, ctx):
         request = IRequest(ctx)
+        user = IAuthenticatedRequest(ctx).avatar
 
         log.msg('---------------- file upload ----------------')
-        for key, records in request.files.iteritems():
-            log.msg("Received as %s:" % key)
+        for formkey, records in request.files.iteritems():
+            #log.msg("Received as %s:" % formkey)
             for record in records:
-                name, mime, stream = record
-                with open('files/test/%s' % name, 'w') as f:
-                    f.write(stream.read())
-                log.msg('saved: %s %s' % (name, mime))
+                backend_rsp = self.backend.add_file(user, record)
 
         return Response(
             OK,
             {'content-type': MimeType('text', 'html')},
-            stream='Upload complete.<br><a href="/put">Go back to PutZone.</a>'
+            stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
         )
+
 
 class DeleteResource(Resource):
 
