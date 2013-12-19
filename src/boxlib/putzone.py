@@ -43,7 +43,16 @@ class PutResource(Resource):
         )
 
     def render_file(self, filename):
-        return '%s <a href="/put/delete?file=%s">delete</a>' % (filename, filename)
+        formatted = '''
+%s <a href="/put/delete?file=%s">delete</a>
+<form action="/put/link" enctype="multipart/form-data" method="post">
+    <input type="hidden" name="file" value="%s"><br/>
+    Set a download url: <input type="text" name="url" value="%s"><br />
+    Set a download count: <input type="text" name="get_count" value="30"><br />
+    <input type="submit" value="submit">
+</form>
+        '''  % (filename, filename, filename, rndname(18,22))
+        return formatted
 
     def render_files(self, user):
         text = [ "Files of user %r:" % user.name ]
@@ -72,14 +81,7 @@ Upload a file:
     Choose a file to upload: <input type="file" name="putted"><br/>
     <input type="submit" value="submit">
 </form>
-Create a link:
-<form action="/put/link" enctype="multipart/form-data" method="post">
-    Uploaded file name: <input type="text" name="file"><br/>
-    Set a download url: <input type="text" name="url" value="%s"><br />
-    Set a download count: <input type="text" name="get_count" value="30"><br />
-    <input type="submit" value="submit">
-</form>
-        """ % rndname(18,22)]
+        """]
 
 
 from twisted.web2.iweb import IRequest
