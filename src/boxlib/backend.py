@@ -58,7 +58,7 @@ class PutBoxBackend(object):
         except Exception, ex:
             log.err("Upload FAILED: %s" % ex.message)
             returnValue('Sorry. Something went wrong saving your upload: %s' % ex.message)
-        returnValue(rsp)
+        returnValue(backend_rsp)
 
     def write_file(self, stream, location):
         with open(location, 'w') as f:
@@ -70,7 +70,15 @@ class PutBoxBackend(object):
         return "Not really deleted: %s" % localdir(user.name, filename)
 
     def get_link(self, name):
-        return LinkStore.findBy(url=name)
+        return LinkStore.findBy(
+            url=name,
+            #active=True
+        ).addCallback(
+            self.filterExpired
+        )
+
+    def filterExpired(self, lst):
+        return filter(lambda r: r.get_count < r.get_limit, lst)
 
 
 ##
