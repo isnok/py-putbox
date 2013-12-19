@@ -75,15 +75,37 @@ class PutBoxBackend(object):
 
     def get_link(self, name):
         return LinkStore.findBy(
-            url=name,
-            #active=True
-        ).addCallback(
-            self.filterExpired
-        )
+                url=name,
+                #active=True
+            ).addCallback(
+                self.filterExpired
+            ).addCallback(
+                self.increaseCounts
+            )
 
     def filterExpired(self, lst):
-        return filter(lambda r: r.get_count < r.get_limit, lst)
+        return filter(lambda r: r.get_count <= r.get_limit, lst)
 
+    @inlineCallbacks
+    def increaseCounts(self, lst):
+        for record in lst:
+            record.get_count += 1
+            yield record.save()
+        returnValue(lst)
+
+    @inlineCallbacks
+    def delete_link(self, user, url):
+        try:
+            db_records = yield LinkStore.findBy(
+                    owner=user.name,
+                    url=url
+                )
+            for record in db_records:
+                result = yield record.delete()
+        except Exception, ex:
+            log.err("Delete FAILED: %s" % ex.message)
+            returnValue('Sorry. The DB said: %s' % ex.message)
+        returnValue("Link %r deleted." % url)
 
 ##
 #  DB init

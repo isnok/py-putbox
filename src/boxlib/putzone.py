@@ -24,6 +24,7 @@ class PutResource(Resource):
         self.putChild('upload', UploadResource())
         self.putChild('delete', DeleteResource())
         self.putChild('link', LinkResource())
+        self.putChild('unlink', UnlinkResource())
         self.backend = PutBoxBackend()
 
     @inlineCallbacks
@@ -63,7 +64,7 @@ class PutResource(Resource):
 
     def render_link(self, link):
         ''' we get unicode from the twistar object, but need str '''
-        formatted = 'Link: <a href="/get/%(url)s">%(url)s</a> (limit: %(get_limit)s, downloaded: %(get_count)s)' % vars(link)
+        formatted = 'Link: <a href="/get/%(url)s">%(url)s</a> (limit: %(get_limit)s, downloaded: %(get_count)s) <a href="/put/unlink?url=%(url)s">delete</a>' % vars(link)
         return str(formatted)
 
     @inlineCallbacks
@@ -122,6 +123,8 @@ class DeleteResource(Resource):
         request = IRequest(ctx)
         filename = request.args['file'][0]
         user = IAuthenticatedRequest(ctx).avatar
+
+        log.msg('---------------- file delete ----------------')
         backend_rsp = self.backend.remove_file(user, filename)
 
         return Response(
@@ -147,6 +150,29 @@ class LinkResource(PostableResource):
 
         log.msg('---------------- link create ----------------')
         backend_rsp = yield self.backend.add_link(user, file, url, get_count)
+
+        returnValue(
+            Response(
+                OK,
+                {'content-type': MimeType('text', 'html')},
+                stream='%s<br><a href="/put">Go back to PutZone.</a>' % backend_rsp
+            )
+        )
+
+
+class UnlinkResource(Resource):
+
+    def __init__(self):
+        self.backend = PutBoxBackend()
+
+    @inlineCallbacks
+    def render(self, ctx):
+        request = IRequest(ctx)
+        user = IAuthenticatedRequest(ctx).avatar
+        url = request.args['url'][0]
+
+        log.msg('---------------- link delete ----------------')
+        backend_rsp = yield self.backend.delete_link(user, url)
 
         returnValue(
             Response(
